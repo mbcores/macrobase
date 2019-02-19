@@ -58,7 +58,7 @@ class DriversProccesesPool:
                     'driver': driver
                 },
             )
-            process.daemon = True
+            # process.daemon = True
             self._processes.append(process)
 
     def start(self, drivers: List[MacrobaseDriver]):
