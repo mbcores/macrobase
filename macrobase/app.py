@@ -31,8 +31,8 @@ class Application:
         self._drivers: List[MacrobaseDriver] = []
         self._hooks: Dict[HookNames, List[HookHandler]] = {}
 
-    def add_config(self, config_object: ClassVar[SimpleAppConfig]):
-        self.config.from_object(config_object)
+    def add_config(self, config: SimpleAppConfig):
+        self.config.update(config)
 
     def get_driver(self, driver_obj: ClassVar[MacrobaseDriver], *args, **kwargs) -> MacrobaseDriver:
         driver = driver_obj(*args, **kwargs)

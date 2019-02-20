@@ -1,4 +1,4 @@
-from macrobase_driver.config import SimpleConfig, WrappedConfig, LogLevel, LogFormat
+from macrobase_driver.config import SimpleConfig, LogLevel, LogFormat
 
 
 class SimpleAppConfig(SimpleConfig):
@@ -20,7 +20,7 @@ class SimpleAppConfig(SimpleConfig):
     LOG_LEVEL: LogLevel = LogLevel.info
 
 
-class AppConfig(WrappedConfig):
+class AppConfig(SimpleAppConfig):
     """
     Application config
     """
