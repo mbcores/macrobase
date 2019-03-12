@@ -12,6 +12,7 @@ class SimpleAppConfig(SimpleConfig):
     |_| |_| |_|\__,_|\___|_|  \___/|_.__/ \__,_|___/\___|
 """
 
+    VERSION: str = '0.0'
     NAME: str = 'macrobase'
     DEBUG: bool = False
     WORKERS: int = 1
