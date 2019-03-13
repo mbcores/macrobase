@@ -6,7 +6,7 @@ from macrobase.config import AppConfig, SimpleAppConfig
 from macrobase.pool import DriversProccesesPool
 # from macrobase.context import context
 
-from macrobase_driver.logging import get_logging_config
+from macrobase.logging import get_logging_config
 from macrobase_driver import MacrobaseDriver
 from macrobase_driver.hook import HookNames
 
