@@ -16,11 +16,12 @@ class ExtraLogsRenderer(object):
         self.version = config.VERSION
 
     def __call__(self, logger, name, event_dict):
-        event_dict['service'] = {
-            'version': self.version
-        }
-
-        return event_dict
+        if isinstance(event_dict, dict):
+            event_dict['service'] = {
+                'version': self.version
+            }
+    
+            return event_dict
 
 
 def add_log_location_data(logger, method_name, event_dict):
@@ -44,35 +45,28 @@ def add_log_location_data(logger, method_name, event_dict):
 timestamper = structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f")
 
 
-structlog.configure(
-    processors=[
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
-        add_log_location_data,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        timestamper,
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-
 def get_logging_config(config: AppConfig) -> dict:
-    pre_chain = [
-        # Add the log level and a timestamp to the event_dict if the log entry
-        # is not from structlog.
+    logging_processors = [
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
-        structlog.processors.format_exc_info,
         add_log_location_data,
         timestamper,
-        ExtraLogsRenderer(config)
+        ExtraLogsRenderer(config),
+        structlog.processors.format_exc_info,
     ]
+    all_processors = logging_processors + [
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter
+    ]
+
+    structlog.configure(
+        processors=all_processors,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
 
     level = logging.getLevelName(config.LOG_LEVEL.raw.upper())
     if config.DEBUG:
@@ -85,12 +79,12 @@ def get_logging_config(config: AppConfig) -> dict:
             LogFormat.plain: {
                 "()": structlog.stdlib.ProcessorFormatter,
                 "processor": structlog.dev.ConsoleRenderer(colors=False),
-                "foreign_pre_chain": pre_chain,
+                "foreign_pre_chain": logging_processors,
             },
             LogFormat.json: {
                 "()": structlog.stdlib.ProcessorFormatter,
                 "processor": structlog.processors.JSONRenderer(serializer=rapidjson.dumps),
-                "foreign_pre_chain": pre_chain,
+                "foreign_pre_chain": logging_processors,
             }
         },
         "handlers": {
