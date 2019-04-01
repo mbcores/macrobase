@@ -42,7 +42,7 @@ def add_log_location_data(logger, method_name, event_dict):
     return event_dict
 
 
-timestamper = structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f")
+timestamper = structlog.processors.TimeStamper(fmt="iso")
 
 
 def get_logging_config(config: AppConfig) -> dict:
