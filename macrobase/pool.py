@@ -1,12 +1,8 @@
 import os
-from typing import List
-from multiprocessing import Process
-from signal import (
-    SIGTERM,
-    SIGINT,
-    signal as signal_func,
-    Signals
-)
+from typing import List, Tuple
+from multiprocessing import Process, Pool, Queue
+import signal
+from signal import SIGTERM, SIGINT, SIGUSR1, signal as handle_signal
 
 from macrobase_driver import MacrobaseDriver
 
@@ -17,66 +13,65 @@ log = get_logger('macrobase_pool')
 
 class DriversProccesesPool:
 
-    class Signal:
-        stopped = False
-
     def __init__(self):
-        self._processes = []
+        self._root_pid = os.getpid()
+        self._processes: Tuple[MacrobaseDriver, Process] = []
 
-    def _serve(self, driver: MacrobaseDriver):
-        return driver.run()
+    def _serve(self, driver: MacrobaseDriver, queue: Queue):
+        try:
+            driver.run()
+            queue.put(os.getpid())
+        except Exception as e:
+            pass
 
-    def _add(self, drivers: List[MacrobaseDriver]):
-        def sig_handler(signal, frame):
-            pid = None
-            f_locals_self = frame.f_locals.get('self')
+    def _get_process(self, driver: MacrobaseDriver) -> Tuple[MacrobaseDriver, Process]:
+        def sig_handle(signal, frame):
+            pid = os.getpid()
 
-            if f_locals_self is not None and hasattr(f_locals_self, 'pid'):
-                pid = f_locals_self.pid
-
-            signals = Signals(signal)
-
-            if signals.name == 'SIGINT':
-                log.debug(f'User has stop process {pid}. Shutting down.')
-            elif signals.name == 'SIGTERM':
-                log.debug(f'Process has stop process {pid}. Shutting down.')
+            if pid == self._root_pid:
+                log.debug(f'Macrobase Pool completed with {pid} pid')
             else:
-                log.debug(f'Received unknown signal {signals.name} from proccess {pid}. Shutting down.')
+                log.debug(f'Driver completed with {pid} pid')
+                os.kill(pid, SIGUSR1)
 
-            for process in self._processes:
-                os.kill(process.pid, SIGINT)
+        handle_signal(SIGTERM, lambda s, f: sig_handle(s, f))
+        handle_signal(SIGINT, lambda s, f: sig_handle(s, f))
 
-            exit()
+        process = Process(
+            name=driver.__class__.__name__,
+            target=self._serve,
+            kwargs={
+                'driver': driver,
+                'queue': self.queue,
+            },
+        )
 
-        signal_func(SIGINT, lambda s, f: sig_handler(s, f))
-        signal_func(SIGTERM, lambda s, f: sig_handler(s, f))
-
-        for driver in drivers:
-            process = Process(
-                target=self._serve,
-                kwargs={
-                    'driver': driver
-                },
-            )
-            # process.daemon = True
-            self._processes.append(process)
+        return (driver, process)
 
     def start(self, drivers: List[MacrobaseDriver]):
-        self._add(drivers)
+        self.queue = Queue(maxsize=len(drivers))
 
-        for process in self._processes:
+        for driver in drivers:
+            self._processes.append(self._get_process(driver))
+
+        for driver, process in self._processes:
             process.start()
-            log.debug(f'Process {process.pid} started')
+            log.debug(f'Driver {driver} started with {process.pid} pid')
 
         self.join_and_terminate()
 
     def join_and_terminate(self):
-        for process in self._processes:
-            process.join()
+        while True:
+            pid = self.queue.get()
+            log.debug(f'Driver completed with {pid} pid')
 
-        self.terminate()
+            self.terminate()
+            break
+
+        for _, process in self._processes:
+            process.join()
 
     def terminate(self):
         # the above processes will block this until they're stopped
-        for process in self._processes:
+        for _, process in self._processes:
             process.terminate()
