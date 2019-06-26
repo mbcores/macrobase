@@ -1,5 +1,5 @@
 from typing import List, Dict, ClassVar
-import logging.config
+import logging
 import asyncio
 
 from macrobase.config import AppConfig, SimpleAppConfig
@@ -41,6 +41,9 @@ class Application:
 
     def add_driver(self, driver: MacrobaseDriver):
         self._drivers.append(driver)
+
+    def add_drivers(self, drivers: List[MacrobaseDriver]):
+        self._drivers.extend(drivers)
 
     async def _apply_logging(self):
         self._logging_config = get_logging_config(self.config)

@@ -22,7 +22,8 @@ class DriversProccesesPool:
             driver.run()
             queue.put(os.getpid())
         except Exception as e:
-            pass
+            log.error(e)
+            raise
 
     def _get_process(self, driver: MacrobaseDriver) -> Tuple[MacrobaseDriver, Process]:
         def sig_handle(signal, frame):
@@ -74,4 +75,7 @@ class DriversProccesesPool:
     def terminate(self):
         # the above processes will block this until they're stopped
         for _, process in self._processes:
+            if process.is_alive() is False:
+                continue
+
             process.terminate()
