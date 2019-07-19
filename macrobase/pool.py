@@ -1,7 +1,7 @@
 import os
 from typing import List, Tuple
-from multiprocessing import Process, Pool, Queue
-import signal
+from enum import Enum
+from multiprocessing import Process, Queue
 from signal import SIGTERM, SIGINT, SIGUSR1, signal as handle_signal
 
 from macrobase_driver import MacrobaseDriver
@@ -11,21 +11,33 @@ from structlog import get_logger
 log = get_logger('macrobase_pool')
 
 
-class DriversProccesesPool:
+class DriverResultType(Enum):
+    success = 0
+    error = 1
+
+
+class DriversPool:
+    """
+    Pool processes of drivers. Kills main process if child process is killed or closed.
+    """
 
     def __init__(self):
         self._root_pid = os.getpid()
-        self._processes: Tuple[MacrobaseDriver, Process] = []
+        self._processes: List[Tuple[MacrobaseDriver, Process]] = []
+        self._queue: Queue = None
 
     def _serve(self, driver: MacrobaseDriver, queue: Queue):
+        pid = os.getpid()
+
         try:
             driver.run()
-            queue.put(os.getpid())
+            queue.put((pid, DriverResultType.success))
         except Exception as e:
             log.error(e)
+            queue.put((pid, DriverResultType.error))
             raise
 
-    def _get_process(self, driver: MacrobaseDriver) -> Tuple[MacrobaseDriver, Process]:
+    def _get_process(self, driver) -> Tuple[MacrobaseDriver, Process]:
         def sig_handle(signal, frame):
             pid = os.getpid()
 
@@ -43,14 +55,14 @@ class DriversProccesesPool:
             target=self._serve,
             kwargs={
                 'driver': driver,
-                'queue': self.queue,
-            },
+                'queue': self._queue,
+            }
         )
 
         return (driver, process)
 
     def start(self, drivers: List[MacrobaseDriver]):
-        self.queue = Queue(maxsize=len(drivers))
+        self._queue = Queue(maxsize=len(drivers))
 
         for driver in drivers:
             self._processes.append(self._get_process(driver))
@@ -63,7 +75,7 @@ class DriversProccesesPool:
 
     def join_and_terminate(self):
         while True:
-            pid = self.queue.get()
+            pid, type = self._queue.get()
             log.debug(f'Driver completed with {pid} pid')
 
             self.terminate()

@@ -1,9 +1,10 @@
 from typing import List, Dict, ClassVar
 import logging
+import logging.config
 import asyncio
 
 from macrobase.config import AppConfig, SimpleAppConfig
-from macrobase.pool import DriversProccesesPool
+from macrobase.pool import DriversPool
 # from macrobase.context import context
 
 from macrobase.logging import get_logging_config
@@ -27,7 +28,7 @@ class Application:
         self.name = name
         self.loop = loop
         self.config = AppConfig()
-        self._pool = DriversProccesesPool()
+        self._pool = DriversPool()
         self._drivers: List[MacrobaseDriver] = []
 
     def add_config(self, config: SimpleAppConfig):
