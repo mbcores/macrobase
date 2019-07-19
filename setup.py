@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='macrobase',
-    version='0.0.10',
+    version='0.0.11',
     packages=find_packages(),
     url='https://github.com/mbcores/macrobase',
     license='MIT',
@@ -10,7 +10,7 @@ setup(
     author_email='alexey.shagaleev@yandex.ru',
     description='Macrobase framework for build mAcroservices',
     install_requires=[
-        'macrobase-driver>=0.0.14',
+        'macrobase-driver>=0.0.15',
         'structlog==19.1.0'
     ]
 )
