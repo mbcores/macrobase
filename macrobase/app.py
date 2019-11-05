@@ -1,4 +1,4 @@
-from typing import List, Dict, ClassVar, Callable
+from typing import List, Dict, Type, Callable, ClassVar, TypeVar
 import random
 import string
 import logging
@@ -6,13 +6,13 @@ import logging.config
 import asyncio
 
 from macrobase.cli import Cli, ArgumentParsingException
-from macrobase.config import AppConfig, SimpleAppConfig
 from macrobase.pool import DriversPool
 from macrobase.hook import HookNames
 # from macrobase.context import context
 
-from macrobase.logging import get_logging_config
+# from macrobase.logging import get_logging_config
 from macrobase_driver import MacrobaseDriver
+from macrobase_driver.config import CommonConfig, AppConfig, DriverConfig
 
 from structlog import get_logger
 
@@ -21,7 +21,7 @@ log = get_logger('macrobase')
 
 class Application:
 
-    def __init__(self, name: str = None):
+    def __init__(self, config: AppConfig, name: str = None):
         """Create Application object.
 
         :param loop: asyncio compatible event loop
@@ -29,17 +29,19 @@ class Application:
         :return: Nothing
         """
         self.name = name
-        self.config = AppConfig()
+        self._config = config
         self._pool = None
         self._hooks: Dict[HookNames, List[Callable]] = {}
         self._drivers: Dict[str, MacrobaseDriver] = {}
 
-    def add_config(self, config: SimpleAppConfig):
-        self.config.update(config)
+    @property
+    def config(self) -> AppConfig:
+        return self._config
 
-    def get_driver(self, driver_obj: ClassVar[MacrobaseDriver], *args, **kwargs) -> MacrobaseDriver:
-        driver = driver_obj(*args, **kwargs)
-        driver.update_config(self.config)
+    def get_driver(self, driver_cls: Type[MacrobaseDriver], driver_config: Type[DriverConfig], *args, **kwargs) -> MacrobaseDriver:
+        # TODO: fix type hints
+        common_config = CommonConfig(self.config, driver_config)
+        driver = driver_cls(config=common_config, *args, **kwargs)
 
         return driver
 
@@ -64,12 +66,14 @@ class Application:
         for handler in self._hooks[name]:
             handler(self)
 
-    def _apply_logging(self):
-        self._logging_config = get_logging_config(self.config)
-        logging.config.dictConfig(self._logging_config)
+    # TODO: fix logging
+    # def _apply_logging(self):
+    #     self._logging_config = get_logging_config(self.config.app)
+    #     logging.config.dictConfig(self._logging_config)
 
     def _prepare(self):
-        self._apply_logging()
+        # self._apply_logging()
+        pass
 
     def run(self, argv: List[str] = None):
         if argv is None:
