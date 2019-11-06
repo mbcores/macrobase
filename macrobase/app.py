@@ -77,7 +77,7 @@ class Application:
 
     def run(self, argv: List[str] = None):
         if argv is None:
-            argv = []
+            argv = ['start', 'all']
 
         self._prepare()
 
