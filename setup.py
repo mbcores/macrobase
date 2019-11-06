@@ -10,7 +10,7 @@ setup(
     author_email='alexey.shagaleev@yandex.ru',
     description='Macrobase framework for build mAcroservices',
     install_requires=[
-        'macrobase-driver>=0.0.16',
-        'structlog==19.1.0'
+        'macrobase-driver>=1.0.0,<2.0.0',
+        'structlog==19.2.0'
     ]
 )
