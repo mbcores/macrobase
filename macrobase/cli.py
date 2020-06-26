@@ -41,8 +41,6 @@ class Cli(object):
             help='Choose drivers names',
         )
 
-        list_parser = subparsers.add_parser('list')
-        
         self._action_start = action_start
         self._action_list = action_list
 

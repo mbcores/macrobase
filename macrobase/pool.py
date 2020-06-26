@@ -1,14 +1,13 @@
-import os
-from typing import List, Tuple
 from enum import Enum
 from multiprocessing import Process, Queue
+import os
 from signal import SIGTERM, SIGINT, SIGUSR1, signal as handle_signal
+from typing import List, Tuple
 
 from macrobase_driver import MacrobaseDriver
-
 from structlog import get_logger
 
-log = get_logger('macrobase_pool')
+log = get_logger('macrobase.pool')
 
 
 class DriverResultType(Enum):
