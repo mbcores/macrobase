@@ -1,20 +1,14 @@
-from typing import List, Dict, Type, Callable, ClassVar, TypeVar
+import asyncio
 import random
 import string
-import logging
-import logging.config
-import asyncio
+from typing import List, Dict, Type, Callable
 
-from macrobase.cli import Cli, ArgumentParsingException
-from macrobase.pool import DriversPool
-from macrobase.hook import HookNames
-# from macrobase.context import context
-
-# from macrobase.logging import get_logging_config
 from macrobase_driver import MacrobaseDriver
 from macrobase_driver.config import CommonConfig, AppConfig, DriverConfig
-
 from structlog import get_logger
+
+from macrobase.hook import HookNames
+from macrobase.pool import DriversPool
 
 log = get_logger('macrobase')
 
@@ -24,7 +18,6 @@ class Application:
     def __init__(self, config: AppConfig, name: str = None):
         """Create Application object.
 
-        :param loop: asyncio compatible event loop
         :param name: string for naming drivers
         :return: Nothing
         """
@@ -32,7 +25,7 @@ class Application:
         self._config = config
         self._pool = None
         self._hooks: Dict[HookNames, List[Callable]] = {}
-        self._drivers: Dict[str, MacrobaseDriver] = {}
+        self.drivers: Dict[str, MacrobaseDriver] = {}
 
     @property
     def config(self) -> AppConfig:
@@ -48,7 +41,7 @@ class Application:
     def add_driver(self, driver: MacrobaseDriver, alias: str = None):
         if alias is None:
             alias = ''.join(random.choice(string.ascii_lowercase) for i in range(16))
-        self._drivers[alias] = driver
+        self.drivers[alias] = driver
 
     def add_drivers(self, drivers: List[MacrobaseDriver]):
         [self.add_driver(d) for d in drivers]
@@ -75,30 +68,22 @@ class Application:
         # self._apply_logging()
         pass
 
-    def run(self, argv: List[str] = None):
-        if argv is None:
-            argv = ['start', 'all']
-
+    def run(self, aliases: List[str] = None):
         self._prepare()
 
         self._call_hooks(HookNames.before_start)
 
-        try:
-            Cli(list(self._drivers.keys()), self._action_start, self._action_list).parse(argv)
-        except ArgumentParsingException as e:
-            print(e.message)
-
-        self._call_hooks(HookNames.after_stop)
-
-    def _action_start(self, aliases: List[str]):
-        if len(aliases) == 1:
+        if aliases is not None and len(aliases) == 1:
             try:
-                self._drivers.get(aliases[0]).run()
+                self.drivers.get(aliases[0]).run()
             finally:
                 asyncio.get_event_loop().close()
         else:
             self._pool = DriversPool()
-            self._pool.start([d for a, d in self._drivers.items() if a in aliases])
+            self._pool.start(
+                [d for a, d in self.drivers.items() if a in aliases]
+                if aliases is not None
+                else list(self.drivers.values())
+            )
 
-    def _action_list(self, aliases: List[str]):
-        print(f"Available drivers to start: \n{[n for n in aliases]}")
+        self._call_hooks(HookNames.after_stop)
