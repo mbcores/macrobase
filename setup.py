@@ -8,11 +8,14 @@ requirements = [
 test_requirements = [
     'pytest==5.4.3',
     'pytest-cov==2.10.0',
+    'pytest-cov==2.10.0',
+    'pytest-timeout-1.4.1',
+    'pytest-mock==3.1.1',
 ]
 
 dev_requirements = test_requirements + [
-    'flake8',
-    'flake8-import-order'
+    'flake8==3.8.3',
+    'flake8-import-order==0.18.1',
 ]
 
 
