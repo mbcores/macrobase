@@ -21,7 +21,7 @@ dev_requirements = test_requirements + [
 
 setup(
     name='macrobase',
-    version='2.1.0',
+    version='3.1.0',
     packages=find_packages(),
     url='https://github.com/mbcores/macrobase',
     license='MIT',
