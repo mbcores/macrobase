@@ -74,6 +74,9 @@ class DriversPool:
         self.join_and_terminate()
 
     def join_and_terminate(self):
+        if len(self._processes) == 0:
+            return
+
         while True:
             pid, type = self._queue.get()
             log.debug(f'Driver completed with {pid} pid')
