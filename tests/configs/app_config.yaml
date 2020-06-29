@@ -1,0 +1,5 @@
+version: 1.0.0
+name: testable application
+debug: True
+log_format: plain
+log_level: debug

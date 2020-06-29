@@ -1,9 +1,9 @@
-from enum import IntEnum
+from enum import Enum
 
 
-class HookNames(IntEnum):
-    before_start = 0
-    after_stop = 3
+class HookNames(Enum):
+    before_start = 'before_start'
+    after_stop = 'after_stop'
 
 
 # class HookHandler(object):
