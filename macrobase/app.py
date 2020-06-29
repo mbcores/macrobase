@@ -52,7 +52,7 @@ class Application:
 
         self._hooks[name].append(handler)
 
-    def _call_hooks(self, name: HookNames):
+    def call_hooks(self, name: HookNames):
         if name not in self._hooks:
             return
 
@@ -71,7 +71,7 @@ class Application:
     def run(self, aliases: List[str] = None):
         self._prepare()
 
-        self._call_hooks(HookNames.before_start)
+        self.call_hooks(HookNames.before_start)
 
         if aliases is not None and len(aliases) == 1:
             try:
@@ -86,4 +86,4 @@ class Application:
                 else list(self.drivers.values())
             )
 
-        self._call_hooks(HookNames.after_stop)
+        self.call_hooks(HookNames.after_stop)
