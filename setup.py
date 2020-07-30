@@ -9,19 +9,20 @@ test_requirements = [
     'pytest==5.4.3',
     'pytest-cov==2.10.0',
     'pytest-cov==2.10.0',
-    'pytest-timeout-1.4.1',
+    'pytest-timeout==1.4.1',
     'pytest-mock==3.1.1',
+    'pytest-mock==3.2.0',
 ]
 
 dev_requirements = test_requirements + [
     'flake8==3.8.3',
-    'flake8-import-order==0.18.1',
+    'flake8-import-order==0.18.1'
 ]
 
 
 setup(
     name='macrobase',
-    version='3.0.0',
+    version='3.0.1',
     packages=find_packages(),
     url='https://github.com/mbcores/macrobase',
     license='MIT',
