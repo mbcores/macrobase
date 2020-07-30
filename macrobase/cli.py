@@ -24,7 +24,7 @@ class Cli:
 
         start_parser.add_argument(
             'drivers',
-            nargs='?',
+            nargs='+',
             choices=aliases,
             help='Choose drivers names',
         )

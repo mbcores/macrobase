@@ -1,6 +1,7 @@
 from enum import Enum
 from multiprocessing import Process, Queue
 import os
+import platform
 from signal import SIGTERM, SIGINT, SIGUSR1, signal as handle_signal
 from typing import List, Tuple
 
@@ -8,6 +9,10 @@ from macrobase_driver import MacrobaseDriver
 from structlog import get_logger
 
 log = get_logger('macrobase.pool')
+
+if platform.system() != "Darwin":
+    import multiprocessing as mp
+    mp.set_start_method('fork')
 
 
 class DriverResultType(Enum):
