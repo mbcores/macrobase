@@ -10,7 +10,7 @@ from structlog import get_logger
 
 log = get_logger('macrobase.pool')
 
-if platform.system() != "Darwin":
+if platform.system() == "Darwin":
     import multiprocessing as mp
     mp.set_start_method('fork')
 
@@ -28,7 +28,7 @@ class DriversPool:
     def __init__(self):
         self._root_pid = os.getpid()
         self._processes: List[Tuple[MacrobaseDriver, Process]] = []
-        self._queue: Queue = None
+        self._queue: Queue = Queue()
 
     def _serve(self, driver: MacrobaseDriver, queue: Queue):
         pid = os.getpid()
@@ -66,7 +66,7 @@ class DriversPool:
         return (driver, process)
 
     def start(self, drivers: List[MacrobaseDriver]):
-        self._queue = Queue(maxsize=len(drivers))
+        self._queue.maxsize = len(drivers)
 
         for driver in drivers:
             self._processes.append(self._get_process(driver))

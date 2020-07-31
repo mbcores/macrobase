@@ -1,5 +1,6 @@
 import argparse
 import sys
+from typing import List
 
 from macrobase.app import Application
 from macrobase.hook import HookNames
@@ -16,16 +17,14 @@ class Cli:
         self._add_hooks_command()
 
     def _add_start_command(self):
-        aliases = list(self._app.drivers.keys())
-
         # start command
         start_parser = self._subparsers.add_parser('start', help='start drivers')
-        start_parser.description = 'start drivers'
+        start_parser.description = 'Start drivers by names.'
 
         start_parser.add_argument(
             'drivers',
-            nargs='+',
-            choices=aliases,
+            nargs='?',
+            type=str,
             help='Choose drivers names',
         )
         start_parser.add_argument('-a', '--all', action='store_true', default=False, help='start all drivers')
@@ -60,8 +59,20 @@ class Cli:
             print('unknown command')
             sys.exit(0)
 
+    def _get_application_drivers_aliases(self) -> List[str]:
+        return list(self._app.drivers.keys())
+
     def _execute_start(self, parsed_args: argparse.Namespace):
-        if parsed_args.all and parsed_args.drivers is not None and len(parsed_args.drivers) > 0:
+        drivers = []
+        if parsed_args.drivers is not None:
+            drivers = parsed_args.drivers.split(',')
+
+            # validate drivers
+            unexpected_drivers = list(filter(lambda d: d not in self._get_application_drivers_aliases(), drivers))
+            if len(unexpected_drivers) > 0:
+                self._parser.error(f"Unexpected drivers `{','.join(unexpected_drivers)}`")
+
+        if parsed_args.all and len(drivers) > 0:
             print('warning: using `--all` argument with any drivers will cause run all drivers.')
 
         if parsed_args.all:
