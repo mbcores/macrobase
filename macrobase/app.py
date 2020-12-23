@@ -25,6 +25,7 @@ class Application:
         self._config = config
         self._pool = None
         self._hooks: Dict[HookNames, List[Callable]] = {}
+        self._scripts: Dict[str, Callable] = {}
         self.drivers: Dict[str, MacrobaseDriver] = {}
 
     @property
@@ -52,12 +53,27 @@ class Application:
 
         self._hooks[name].append(handler)
 
+    def add_script(self, name: str, handler: Callable[['Application'], None]):
+        name = name.strip().lower()
+        if name:
+            self._scripts[name] = handler
+
     def call_hooks(self, name: HookNames):
         if name not in self._hooks:
             return
 
         for handler in self._hooks[name]:
             handler(self)
+
+    def call_script(self, name: str):
+        name = name.strip().lower()
+        if name not in self._scripts:
+            return
+
+        self._scripts[name](self)
+
+    def get_scripts(self) -> List[str]:
+        return [i for i in self._scripts]
 
     # TODO: fix logging
     # def _apply_logging(self):

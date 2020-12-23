@@ -15,6 +15,7 @@ class Cli:
 
         self._add_start_command()
         self._add_hooks_command()
+        self._add_script_command()
 
     def _add_start_command(self):
         # start command
@@ -43,6 +44,17 @@ class Cli:
         )
         # hooks_parser.add_argument('-a', '--all', action='store_true', default=False, help='start all hooks')
 
+    def _add_script_command(self):
+        script_parser = self._subparsers.add_parser('script', help='start script')
+        script_parser.description = 'Start script by name'
+
+        script_parser.add_argument(
+            'script_name',
+            choices=self._app.get_scripts(),
+            type=str,
+            help='Choose script',
+        )
+
     def execute(self):
         try:
             parsed_args = self._parser.parse_args()
@@ -55,6 +67,8 @@ class Cli:
             self._execute_start(parsed_args)
         elif parsed_args.catalog == 'hooks':
             self._execute_hooks(parsed_args)
+        elif parsed_args.catalog == 'script':
+            self._execute_script(parsed_args)
         else:
             print('unknown command')
             sys.exit(0)
@@ -83,3 +97,7 @@ class Cli:
     def _execute_hooks(self, parsed_args: argparse.Namespace):
         hook = HookNames(parsed_args.hook_name)
         self._app.call_hooks(hook)
+
+    def _execute_script(self, parsed_args: argparse.Namespace):
+        script: str = getattr(parsed_args, 'script_name', '')
+        self._app.call_script(script)
